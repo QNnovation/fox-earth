@@ -45,17 +45,24 @@ elif _argLen == 4:
 else:		     
 	getUsage()
 
-
 # Connect to server;
 client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_sock.connect((_data['data']['ipaddress'], int(_port)))
 
 # Send data to server;
 raw_data = json.dumps(_data).encode('utf-8')
-client_sock.sendall(raw_data)
-
+client_sock.send(raw_data)
 
 # Answer from server;
-reply = client_sock.recv(1024)
-print("Received: ", reply)
+full_data = ''
+while True:
+	print("Receive data1")
+	data = client_sock.recv(1024)
+	print("Receive data2")
+	if not data:
+		break
+	print("echo")
+	full_data += data.decode('utf-8')
 client_sock.close()
+print("Received: ", full_data)
+
