@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
 import netifaces
+import subprocess
 from accessify import private
-
 
 # Class implementation;
 
 class GetNetworkInfo(object):
 	def __init__(self):
-		self.__nicInfo = {'iface_name': '',
-							'ip': [],
-							'netmask': [],
-							'gw': '',
-							'dns': ''}
-	
+		self.__nicInfo = {'iface_name': '',	'ip': [], 'netmask': [], 'gw': '', 'dns': []}
+
 	@private
 	def __getNicNameByIpAddr(self, ipAddr):
 		interfacesList = netifaces.interfaces()
@@ -23,9 +19,8 @@ class GetNetworkInfo(object):
 			if str(ipAddr) == ip:
 				matchInterface = interface
 				break
-		return matchInterface	
-	
-	
+		return matchInterface
+
 	def getNicInfo(self, ipAddr):
 		interface = self.__getNicNameByIpAddr(ipAddr)
 		if interface:
@@ -40,10 +35,19 @@ class GetNetworkInfo(object):
 			# Nic gateway address;
 			self.__nicInfo['gw'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
 			# Nic dns adress;
-			self.__nicInfo['dns'] = 'empty'
-
-		#print(self.__nicInfo)
+			# Read /etc/resolv.conf
+			f = open('/etc/resolv.conf', 'r')
+			while True:
+				line = f.readline()
+				if not line:
+					break
+				if 'nameserver' in line:
+					pos = line.find(' ')
+					line = line[pos + 1:].strip()
+					self.__nicInfo['dns'].append(line)
+			f.close()
 		return self.__nicInfo
-		
+
+# For test purposes;
 #obj = GetNetworkInfo()
-#obj.getNicInfo('127.0.0.1')
+#print(obj.getNicInfo('127.0.0.1'))
