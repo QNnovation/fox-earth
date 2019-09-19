@@ -47,7 +47,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     		# Send data to client;
 			raw_dataJSON = json.dumps(nicInfoDict).encode('utf-8')
 			print('Dictionary: ', raw_dataJSON)
-			print(f'Size of transmited message: {len(raw_dataJSON)} bytes.')
+			print('Length of transmited message: %d characters.' % len(raw_dataJSON))
 			conn.send(raw_dataJSON)
 			# Send end of data sign;
 			conn.send(b'end')

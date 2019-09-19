@@ -4,6 +4,7 @@ import sys
 import socket
 import ipaddress
 import json
+import argparse
 
 # Data;
 HOST = 'localhost'
@@ -48,34 +49,39 @@ else:
 
 print('[Starting TCP client]')
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-	sock.connect((_data['data']['ipaddress'], PORT))
-	# Send data to server;
-	raw_data = json.dumps(_data).encode('utf-8')
-	sock.send(raw_data)
-	# Send end of data sign;
-	sock.send(b'end')
+try:
+	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+		sock.connect((_data['data']['ipaddress'], PORT))
+		# Send data to server;
+		raw_data = json.dumps(_data).encode('utf-8')
+		sock.send(raw_data)
+		# Send end of data sign;
+		sock.send(b'end')
 
-	# Get data from server;
-	print("Get data from server...")
-	full_data = b''
-	while True:
-		data = sock.recv(1024)
-		if not data:
-			break
-		# Check for error;
-		if 'error' in data.decode('utf-8'):
-			print('Client send bad options!')
-			break
+		# Get data from server;
+		print("Get data from server...")
+		full_data = b''
+		while True:
+			data = sock.recv(1024)
+			if not data:
+				break
+			# Check for error;
+			if 'error' in data.decode('utf-8'):
+				print('Client send bad options!')
+				break
 
-		full_data += data
-		# Check for end of data transmit;
-		if 'end' in data.decode('utf-8'):
-			full_data = full_data.decode('utf-8').replace('end', '')
-			break;
+			full_data += data
+			# Check for end of data transmit;
+			if 'end' in data.decode('utf-8'):
+				full_data = full_data.decode('utf-8').replace('end', '')
+				break;
 
-	# Convert input data to JSON;
-	if full_data:
-		print("Received data from server ->\n", full_data)
-		data = json.loads(full_data)
-		print("Unpacked data reply from server ->\n ", data)
+		# Convert input data to JSON;
+		if full_data:
+			print("Received data from server ->\n", full_data)
+			data = json.loads(full_data)
+			print("Unpacked data reply from server ->\n ", data)
+except socket.error:
+	print('Network error.')
+else:
+	print('Somthing else.')
