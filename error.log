@@ -1,0 +1,6 @@
+root@Deb95Test:/home/amelnyk/src/pets/fox-earth# ./fox-earth-server.py 
+  File "./fox-earth-server.py", line 50
+    print(f'Size of transmited message: {len(raw_dataJSON)} bytes.')
+                                                                  ^
+SyntaxError: invalid syntax
+
