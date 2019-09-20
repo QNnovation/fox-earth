@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import socket
 import ipaddress
 import json
@@ -10,10 +9,24 @@ import argparse
 HOST = 'localhost'
 PORT = 49111
 
-_argLen = len(sys.argv)
+# Create the argv parser;
+argv_parser = argparse.ArgumentParser(description='TCP client for remote connection')
+
+# Add the arguments;
+argv_parser.add_argument('Source',
+						metavar='source',
+						type=str,
+						help='the ip address of remote server')
+argv_parser.add_argument('--get-settings',
+						action='store_true',
+						help='get server network interface options')
+
+_args = argv_parser.parse_args()
+
 
 # JSON;
 _data = {'data':{'ipaddress': 'null', 'command': 'null'}}
+
 
 # Validate ip address;
 def _ipAddrValidate(ipAddr):
@@ -21,67 +34,62 @@ def _ipAddrValidate(ipAddr):
 		ipaddress.ip_address(ipAddr)
 		return True
 	except ValueError as errorCode:
-		print("Error: invalid input ip address entered!")
+		print("[Network error: invalid input ip address entered]")
 		return False
 
-def getUsage():
-    print("Usage:\n$./fox-earth-client.py LATER")
 
 # Check for input command arguments;
-if _argLen == 3:
-    if sys.argv[1] == "-s":
-    	if _ipAddrValidate(sys.argv[2]):
-    		_data['data']['ipaddress'] = sys.argv[2]
-    	else:
-    		getUsage()
+def _getCliArgs():
+	if _args.get_settings:
+		if _ipAddrValidate(_args.Source):
+			_data['data']['ipaddress']	= _args.Source
+			_data['data']['command']	= '--get-settings'
+			return True
+		else:
+			return False
 
-elif _argLen == 4:
-	if sys.argv[1] == "-s":
-		if sys.argv[3] == "--get-settings":
-			if _ipAddrValidate(sys.argv[2]):
-				_data['data']['ipaddress'] = sys.argv[2]
-				_data['data']['command'] = sys.argv[3]
-			else:
-				getUsage()
 
-else:
-	getUsage()
+print('[Starting EARTH TCP client]')
 
-print('[Starting TCP client]')
 
-try:
-	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-		sock.connect((_data['data']['ipaddress'], PORT))
-		# Send data to server;
-		raw_data = json.dumps(_data).encode('utf-8')
-		sock.send(raw_data)
-		# Send end of data sign;
-		sock.send(b'end')
+if _getCliArgs():
 
-		# Get data from server;
-		print("Get data from server...")
-		full_data = b''
-		while True:
-			data = sock.recv(1024)
-			if not data:
-				break
-			# Check for error;
-			if 'error' in data.decode('utf-8'):
-				print('Client send bad options!')
-				break
+	# Exception 1
+	try:
+		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+		# Exception 2
+			try:
+				sock.connect((_data['data']['ipaddress'], PORT))
+				# Send data to server;
+				raw_data = json.dumps(_data).encode('utf-8')
+				print("[Log: bytes sended %d]" % sock.send(raw_data))
+				# Send end of data sign;
+				sock.send(b'end')
 
-			full_data += data
-			# Check for end of data transmit;
-			if 'end' in data.decode('utf-8'):
-				full_data = full_data.decode('utf-8').replace('end', '')
-				break;
+				# Get data from server;
+				print("Get data from server...")
+				full_data = b''
+				while True:
+					data = sock.recv(1024)
+					if not data:
+						break
+					# Check for error;
+					if 'error' in data.decode('utf-8'):
+						print('Client send bad options!')
+						break
 
-		# Convert input data to JSON;
-		if full_data:
-			print("Received data from server ->\n", full_data)
-			data = json.loads(full_data)
-			print("Unpacked data reply from server ->\n ", data)
-except socket.error:
-	print('Network error.')
-else:
-	print('Somthing else.')
+					full_data += data
+					# Check for end of data transmit;
+					if 'end' in data.decode('utf-8'):
+						full_data = full_data.decode('utf-8').replace('end', '')
+						break;
+
+				# Convert input data to JSON;
+				if full_data:
+					print("Received data from server ->\n", full_data)
+					data = json.loads(full_data)
+					print("Unpacked data reply from server ->\n ", data)
+			except socket.gaierror as err:
+				print('[Network error: address related error connecting to server. %s]' % err)
+	except socket.error as err:
+		print('[Network error: can\'t create socket. %s]' % err)

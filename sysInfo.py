@@ -9,6 +9,7 @@ from accessify import private
 class GetNetworkInfo(object):
 	def __init__(self):
 		self.__nicInfo = {'iface_name': '',	'ip': [], 'netmask': [], 'gw': '', 'dns': []}
+		self.__libList = ['netifaces', 'argparse', 'ipaddress', 'socket', 'accessify', 'netifaces']
 
 	@private
 	def __getNicNameByIpAddr(self, ipAddr):
@@ -48,6 +49,14 @@ class GetNetworkInfo(object):
 			f.close()
 		return self.__nicInfo
 
+	def checkForInstalledLibs(self):
+		installedLibs = str(subprocess.check_output(["pip3", "list"]))
+		for libName in self.__libList:
+			if libName not in installedLibs:
+				print(str(subprocess.check_output(["pip3", "install", "{}".format(libName)])))
+
+
 # For test purposes;
 #obj = GetNetworkInfo()
+#obj.checkForInstalledLibs()
 #print(obj.getNicInfo('127.0.0.1'))
