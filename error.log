@@ -4,3 +4,10 @@ root@Deb95Test:/home/amelnyk/src/pets/fox-earth# ./fox-earth-server.py
                                                                   ^
 SyntaxError: invalid syntax
 
+#####
+2019/09/23
+root@Deb95Test:/home/amelnyk/src/pets/fox-earth# ./fox-earth-client.py 127.0.0.1 
+[Starting EARTH TCP client]
+
+1. Error message must be appeared.
+2. "usege" should be invoked
